@@ -1,0 +1,13 @@
+{
+  "name": "knight-of-questions",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "O Knight of Questions é uma plataforma de estudos gamificada",
+  "main": "index.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}
