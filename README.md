@@ -1,0 +1,1 @@
+Knight of Questions é um projeto de Desenvolvimento Web e Abex V que propõe uma plataforma de estudos gamificada com estética medieval que utiliza questões, flashcards e rankings para incentivar o aprendizado.
