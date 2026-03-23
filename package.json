@@ -4,10 +4,26 @@
   "type": "module",
   "description": "O Knight of Questions é uma plataforma de estudos gamificada",
   "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "db:migrate": "node src/db/migrate.js",
+    "db:seed": "node src/db/seed.js"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "express": "^5.2.1"
-  }
+    "express": "^5.2.1",
+    "sequelize": "^6.37.8",
+    "sqlite3": "^6.0.1"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/marinrenascimento/Knight-of-Questions.git"
+  },
+  "bugs": {
+    "url": "https://github.com/marinrenascimento/Knight-of-Questions/issues"
+  },
+  "homepage": "https://github.com/marinrenascimento/Knight-of-Questions#readme"
 }
