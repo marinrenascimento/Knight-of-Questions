@@ -1,16 +1,14 @@
-import fs from 'node:fs';
-import path from 'node:path';
+import 'dotenv/config';
 import { Sequelize } from 'sequelize';
 
-const dataDir = path.resolve(process.cwd(), 'data');
-const storage = path.join(dataDir, 'database.sqlite');
-
-if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir, { recursive: true });
-}
-
-export const sequelize = new Sequelize({
-  dialect: 'sqlite',
-  storage,
-  logging: false,
-});
+export const sequelize = new Sequelize(
+  process.env.DB_NAME,
+  process.env.DB_USER,
+  process.env.DB_PASS,
+  {
+    host: process.env.DB_HOST,
+    port: Number(process.env.DB_PORT),
+    dialect: 'postgres',
+    logging: false,
+  }
+);

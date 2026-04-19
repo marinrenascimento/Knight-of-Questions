@@ -9,13 +9,10 @@ const metaTable = 'SequelizeMigrations';
 export async function runMigrations() {
   await sequelize.authenticate();
 
-  // Garante que as FKs funcionem (importante no SQLite)
-  await sequelize.query('PRAGMA foreign_keys = ON;');
-
   await sequelize.query(`
     CREATE TABLE IF NOT EXISTS ${metaTable} (
       name TEXT PRIMARY KEY,
-      runOn DATETIME NOT NULL
+      runOn TIMESTAMP NOT NULL
     );
   `);
 

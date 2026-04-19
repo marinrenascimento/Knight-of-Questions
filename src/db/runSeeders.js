@@ -11,7 +11,7 @@ export async function runSeeders() {
   await sequelize.query(`
     CREATE TABLE IF NOT EXISTS ${metaTable} (
       name TEXT PRIMARY KEY,
-      runOn DATETIME NOT NULL
+      runOn TIMESTAMP NOT NULL
     );
   `);
 
