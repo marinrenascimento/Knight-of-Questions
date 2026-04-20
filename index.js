@@ -2,6 +2,7 @@ import express from 'express';
 import 'dotenv/config';
 import userRoutes from './src/routes/userRoutes.js';
 import postRoutes from './src/routes/postRoutes.js';
+import avatarRoutes from './src/routes/avatarRoutes.js';
 import { initModels } from './src/models/index.js';
 import { bootstrapDb } from './src/db/bootstrap.js';
 
@@ -14,6 +15,7 @@ app.use(express.json());
 
 app.use('/users', userRoutes);
 app.use('/posts', postRoutes);
+app.use('/avatares', avatarRoutes);
 
 app.get('/', (req, res) => {
     res.send('API com Express funcionando!');

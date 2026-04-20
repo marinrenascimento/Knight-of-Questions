@@ -6,7 +6,8 @@ import {
     updateUser,
     deleteUser,
     getPostsByUserId,
-    createPostByUserId
+    createPostByUserId,
+    selecionarAvatar
 } from '../controllers/userController.js';
 
 const router = express.Router();
@@ -17,6 +18,7 @@ router.get('/:id', getUserById);
 router.post('/', createUser);
 router.put('/:id', updateUser);
 router.delete('/:id', deleteUser);
+router.put('/:id/avatar', selecionarAvatar);
 router.get('/:id/posts', getPostsByUserId); // 1 -> N
 router.post('/:id/posts', createPostByUserId); // 1 -> N
 

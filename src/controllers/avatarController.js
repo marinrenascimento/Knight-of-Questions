@@ -1,89 +1,100 @@
-// Dados simulados (em memória)
-let avatars = [
-    {
-        id: 1,
-        name: "Cavaleiro",
-        image_url: "https://example.com/knight.png",
-        required_level: 1
-    },
-    {
-        id: 2,
-        name: "Mago",
-        image_url: "https://example.com/wizard.png",
-        required_level: 5
-    }
-];
+import { Avatar, User } from '../models/index.js';
+import { Op } from 'sequelize';
 
-// GET /avatars - Listar todos
-export const getAllAvatars = (req, res) => {
-    res.json(avatars);
+/**
+ * GET /avatares
+ * 
+ * Busca todos os avatares cadastrados no banco de dados
+ */
+export const getAllAvatares = async (req, res) => {
+    try {
+        const avatares = await Avatar.findAll({
+            order: [['nivel_requerido', 'ASC']]
+        });
+        res.json(avatares);
+    } catch (err) {
+        res.status(500).json({
+            message: 'Erro ao buscar os avatares',
+            details: err.message
+        });
+    }
 };
 
-// GET /avatars/:id - Buscar por ID
-export const getAvatarById = (req, res) => {
-    const id = parseInt(req.params.id);
-    const avatar = avatars.find(a => a.id === id);
+/**
+ * GET /avatares/disponiveis?userId=X
+ * 
+ * Busca os avatares disponíveis para o usuário baseado no nível dele
+ */
+export const getAvataresDisponiveis = async (req, res) => {
+    const userId = req.query.userId || req.body.userId;
 
-    if (!avatar) {
-        return res.status(404).json({ message: "Avatar não encontrado" });
-    }
-
-    res.json(avatar);
-};
-
-// POST /avatars - Criar novo
-export const createAvatar = (req, res) => {
-    const { name, image_url, required_level } = req.body;
-
-    if (!name || !image_url) {
+    if (!userId) {
         return res.status(400).json({
-            message: "name e image_url são obrigatórios"
+            message: 'O id do usuário é obrigatório'
         });
     }
 
-    const newAvatar = {
-        id: avatars.length + 1,
-        name,
-        image_url,
-        required_level: required_level || 1
-    };
+    try {
+        const user = await User.findByPk(userId);
+        if (!user) {
+            return res.status(404).json({
+                message: 'Usuário não encontrado'
+            });
+        }
 
-    avatars.push(newAvatar);
+        const avatares = await Avatar.findAll({
+            where: {
+                nivel_requerido: {
+                    [Op.lte]: user.nivel
+                }
+            },
+            order: [['nivel_requerido', 'ASC']]
+        });
 
-    res.status(201).json(newAvatar);
+        res.json(avatares);
+    } catch (err) {
+        res.status(500).json({
+            message: 'Erro ao buscar avatares disponíveis',
+            details: err.message
+        });
+    }
 };
 
-// PUT /avatars/:id - Atualizar
-export const updateAvatar = (req, res) => {
-    const id = parseInt(req.params.id);
-    const { name, image_url, required_level } = req.body;
-
-    const avatarIndex = avatars.findIndex(a => a.id === id);
-
-    if (avatarIndex === -1) {
-        return res.status(404).json({ message: "Avatar não encontrado" });
+/**
+ * GET /avatares/selecionado?userId=X
+ * 
+ * Busca o avatar atual do usuário com base no id dele
+ */
+export const getAvatarSelecionado = async (req, res) => {
+    const userId = req.query.userId || req.body.userId;
+    if (!userId) {
+        return res.status(400).json({
+            message: 'O id do usuário é obrigatório'
+        });
     }
 
-    avatars[avatarIndex] = {
-        ...avatars[avatarIndex],
-        name,
-        image_url,
-        required_level
-    };
+    try {
+        const user = await User.findByPk(userId, {
+            include: [{ model: Avatar, as: 'avatar' }]
+        });
 
-    res.json(avatars[avatarIndex]);
-};
+        if (!user) {
+            return res.status(404).json({
+                message: 'Usuário não encontrado'
+            });
+        }
 
-// DELETE /avatars/:id - Remover
-export const deleteAvatar = (req, res) => {
-    const id = parseInt(req.params.id);
-    const avatarIndex = avatars.findIndex(a => a.id === id);
+        if (!user.avatar) {
+            return res.status(404).json({
+                message: 'Usuário não possui avatar selecionado'
+            });
+        }
 
-    if (avatarIndex === -1) {
-        return res.status(404).json({ message: "Avatar não encontrado" });
+        res.json(user.avatar);
+    } catch (err) {
+        res.status(500).json({
+            message: 'Erro ao buscar avatar selecionado',
+            details: err.message
+        });
     }
-
-    avatars.splice(avatarIndex, 1);
-
-    res.status(204).send(); // No Content
 };

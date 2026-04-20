@@ -5,13 +5,21 @@ function parseId(value) {
   return Number.isNaN(id) ? null : id;
 }
 
-// GET /users - Listar todos
+/**
+ * GET /users
+ * 
+ * Lista todos os usuários
+ */
 export const getAllUsers = async (req, res) => {
   const users = await User.findAll({ order: [['id', 'ASC']] });
   res.json(users);
 };
 
-// GET /users/:id - Buscar por ID (inclui posts)
+/**
+ * GET /users/:id
+ * 
+ * Busca um usuário por ID
+ */
 export const getUserById = async (req, res) => {
   const id = parseId(req.params.id);
   if (id === null) return res.status(400).json({ message: 'ID inválido' });
@@ -25,7 +33,11 @@ export const getUserById = async (req, res) => {
   res.json(user);
 };
 
-// POST /users - Criar novo
+/**
+ * POST /users
+ * 
+ * Cria um novo usuário
+ */
 export const createUser = async (req, res) => {
   const { name, email } = req.body;
 
@@ -41,7 +53,11 @@ export const createUser = async (req, res) => {
   }
 };
 
-// PUT /users/:id - Atualizar
+/**
+ * PUT /users/:id
+ * 
+ * Atualiza um usuário
+ */
 export const updateUser = async (req, res) => {
   const id = parseId(req.params.id);
   if (id === null) return res.status(400).json({ message: 'ID inválido' });
@@ -59,7 +75,11 @@ export const updateUser = async (req, res) => {
   }
 };
 
-// DELETE /users/:id - Remover
+/**
+ * DELETE /users/:id
+ * 
+ * Remove um usuário
+ */
 export const deleteUser = async (req, res) => {
   const id = parseId(req.params.id);
   if (id === null) return res.status(400).json({ message: 'ID inválido' });
@@ -71,7 +91,11 @@ export const deleteUser = async (req, res) => {
   res.status(204).send();
 };
 
-// GET /users/:id/posts - Listar posts de um usuário (1 -> N)
+/**
+ * GET /users/:id/posts
+ * 
+ * Lista os posts de um usuário
+ */
 export const getPostsByUserId = async (req, res) => {
   const id = parseId(req.params.id);
   if (id === null) return res.status(400).json({ message: 'ID inválido' });
@@ -87,7 +111,11 @@ export const getPostsByUserId = async (req, res) => {
   res.json(posts);
 };
 
-// POST /users/:id/posts - Criar post para um usuário (1 -> N)
+/**
+ * POST /users/:id/posts
+ * 
+ * Cria um post para o usuário
+ */
 export const createPostByUserId = async (req, res) => {
   const userId = parseId(req.params.id);
   if (userId === null) return res.status(400).json({ message: 'ID inválido' });
@@ -102,4 +130,57 @@ export const createPostByUserId = async (req, res) => {
 
   const post = await Post.create({ title, body, userId });
   res.status(201).json(post);
+};
+
+/**
+ * PUT /users/:id/avatar
+ * 
+ * Seleciona um avatar para o usuário
+ */
+export const selecionarAvatar = async (req, res) => {
+  const userId = parseId(req.params.id);
+  if (userId === null) {
+    return res.status(400).json({
+      message: 'O id do usuário é inválido'
+    });
+  }
+
+  const { id_avatar } = req.body;
+
+  if (!id_avatar) {
+    return res.status(400).json({
+      message: 'O id_avatar é obrigatório no corpo da requisição'
+    });
+  }
+
+  try {
+    const user = await User.findByPk(userId);
+    if (!user) {
+      return res.status(404).json({
+        message: 'Usuário não encontrado'
+      });
+    }
+
+    const Avatar = (await import('../models/avatar.model.js')).Avatar;
+    const avatar = await Avatar.findByPk(id_avatar);
+    if (!avatar) {
+      return res.status(404).json({
+        message: 'Avatar não encontrado'
+      });
+    }
+
+    if (user.nivel < avatar.nivel_requerido) {
+      return res.status(403).json({
+        message: 'Você ainda não conquistou o nível necessário para selecionar este avatar'
+      });
+    }
+
+    await user.update({ id_avatar });
+    res.json({
+      message: 'Avatar selecionado com sucesso!',
+      user
+    });
+  } catch (err) {
+    res.status(500).json({ message: 'Erro ao selecionar avatar', details: err.message });
+  }
 };
