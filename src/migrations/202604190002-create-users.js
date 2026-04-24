@@ -3,7 +3,7 @@ export async function up({ queryInterface, Sequelize }) {
         id: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
         username: { type: Sequelize.STRING(50), allowNull: false },
         email: { type: Sequelize.STRING(100), allowNull: false, unique: true },
-        senha_hash: { type: Sequelize.STRING(255), allowNull: false },
+        senha_hash: { type: Sequelize.STRING(255), allowNull: false, defaultValue: '', },
         pontos: { type: Sequelize.INTEGER, defaultValue: 0 },
         nivel: { type: Sequelize.INTEGER, defaultValue: 0 },
         id_avatar: {

@@ -43,6 +43,11 @@ User.init(
         key: 'id'
       }
     },
+    role: {
+      type: DataTypes.STRING(50),
+      allowNull: false,
+      defaultValue: 'visitante',
+    },
     criado_em: {
       type: DataTypes.DATE,
       allowNull: false,

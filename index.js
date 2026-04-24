@@ -5,17 +5,19 @@ import postRoutes from './src/routes/postRoutes.js';
 import avatarRoutes from './src/routes/avatarRoutes.js';
 import { initModels } from './src/models/index.js';
 import { bootstrapDb } from './src/db/bootstrap.js';
+import authRoutes from './src/routes/authRoutes.js';
 
 initModels();
 await bootstrapDb();
 const app = express();
-const port = process.env.PORT || 3000;
+const port = Number.parseInt(process.env.PORT ?? '3000', 10);
 
 app.use(express.json());
 
 app.use('/users', userRoutes);
 app.use('/posts', postRoutes);
 app.use('/avatares', avatarRoutes);
+app.use('/auth', authRoutes);
 
 app.get('/', (req, res) => {
     res.send('API com Express funcionando!');
