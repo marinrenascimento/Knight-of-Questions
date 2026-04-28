@@ -1,4 +1,4 @@
-import { Post, User } from '../models/index.js';
+import { User } from '../models/index.js';
 
 function parseId(value) {
   const id = Number.parseInt(value, 10);
@@ -24,33 +24,11 @@ export const getUserById = async (req, res) => {
   const id = parseId(req.params.id);
   if (id === null) return res.status(400).json({ message: 'ID inválido' });
 
-  const user = await User.findByPk(id, {
-    include: [{ model: Post, as: 'posts' }],
-  });
+  const user = await User.findByPk(id);
 
   if (!user) return res.status(404).json({ message: 'Usuário não encontrado' });
 
   res.json(user);
-};
-
-/**
- * POST /users
- * 
- * Cria um novo usuário
- */
-export const createUser = async (req, res) => {
-  const { name, email } = req.body;
-
-  if (!name || !email) {
-    return res.status(400).json({ message: 'Nome e email são obrigatórios' });
-  }
-
-  try {
-    const user = await User.create({ name, email });
-    res.status(201).json(user);
-  } catch (err) {
-    res.status(400).json({ message: 'Erro ao criar usuário', details: err.message });
-  }
 };
 
 /**
@@ -89,47 +67,6 @@ export const deleteUser = async (req, res) => {
 
   await user.destroy();
   res.status(204).send();
-};
-
-/**
- * GET /users/:id/posts
- * 
- * Lista os posts de um usuário
- */
-export const getPostsByUserId = async (req, res) => {
-  const id = parseId(req.params.id);
-  if (id === null) return res.status(400).json({ message: 'ID inválido' });
-
-  const user = await User.findByPk(id);
-  if (!user) return res.status(404).json({ message: 'Usuário não encontrado' });
-
-  const posts = await Post.findAll({
-    where: { userId: id },
-    order: [['id', 'ASC']],
-  });
-
-  res.json(posts);
-};
-
-/**
- * POST /users/:id/posts
- * 
- * Cria um post para o usuário
- */
-export const createPostByUserId = async (req, res) => {
-  const userId = parseId(req.params.id);
-  if (userId === null) return res.status(400).json({ message: 'ID inválido' });
-
-  const { title, body } = req.body;
-  if (!title || !body) {
-    return res.status(400).json({ message: 'title e body são obrigatórios' });
-  }
-
-  const user = await User.findByPk(userId);
-  if (!user) return res.status(404).json({ message: 'Usuário não encontrado' });
-
-  const post = await Post.create({ title, body, userId });
-  res.status(201).json(post);
 };
 
 /**

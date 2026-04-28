@@ -1,5 +1,6 @@
 import { User } from '../models/index.js';
 import { verifyAccessToken } from '../services/jwt.service.js';
+import { isBlacklisted } from '../utils/tokenBlacklist.js';
 
 export const requireAuth = async (req, res, next) => {
     const header = req.headers.authorization ?? '';
@@ -7,6 +8,10 @@ export const requireAuth = async (req, res, next) => {
 
     if (type !== 'Bearer' || !token) {
         return res.status(401).json({ message: 'Token ausente ou inválido' });
+    }
+
+    if (isBlacklisted(token)) {
+        return res.status(401).json({ message: 'Token inválido' });
     }
 
     try {
@@ -37,8 +42,8 @@ export const requireRole = (...allowedRoles) => (req, res, next) => {
 };
 
 const rolePermissions = {
-    admin: ['users:read', 'users:update', 'posts:read', 'posts:create', 'posts:update', 'posts:delete'],
-    visitante: ['posts:read']
+    admin: ['users:read', 'users:update', 'flashcards:read', 'flashcards:create', 'flashcards:update', 'flashcards:delete', 'avatar:read', 'avatar:update'],
+    visitante: ['flashcards:read']
 };
 
 export const requirePermission = (permission) => (req, res, next) => {

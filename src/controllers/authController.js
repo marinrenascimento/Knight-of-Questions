@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { User } from '../models/index.js';
 import { signAccessToken } from '../services/jwt.service.js';
+import { addToBlacklist } from '../utils/tokenBlacklist.js';
 
 function sanitizeUser(user) {
     return {
@@ -80,4 +81,15 @@ export const login = async (req, res) => {
         tokenType: 'Bearer',
         user: sanitizeUser(user),
     });
+};
+
+export const logout = (req, res) => {
+    const token = req.headers.authorization?.split(' ')[1];
+
+    if (!token)
+        return res.status(400).json({ message: 'Token não fornecido' });
+
+    addToBlacklist(token);
+
+    return res.status(200).json({ message: 'Logout realizado com sucesso' });
 };
