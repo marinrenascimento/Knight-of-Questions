@@ -1,4 +1,5 @@
 import { User } from '../models/index.js';
+import { sanitizeUser } from '../utils/userUtils.js';
 
 function parseId(value) {
   const id = Number.parseInt(value, 10);
@@ -12,7 +13,14 @@ function parseId(value) {
  */
 export const getAllUsers = async (req, res) => {
   const users = await User.findAll({ order: [['id', 'ASC']] });
-  res.json(users);
+
+  const sanitizedUsers = [];
+
+  for (let i = 0; i < users.length; i++) {
+    sanitizedUsers.push(sanitizeUser(users[i]));
+  }
+
+  res.json(sanitizedUsers);
 };
 
 /**
@@ -22,13 +30,18 @@ export const getAllUsers = async (req, res) => {
  */
 export const getUserById = async (req, res) => {
   const id = parseId(req.params.id);
-  if (id === null) return res.status(400).json({ message: 'ID inválido' });
+
+  if (id === null) {
+    return res.status(400).json({ message: 'ID inválido' });
+  }
 
   const user = await User.findByPk(id);
 
-  if (!user) return res.status(404).json({ message: 'Usuário não encontrado' });
+  if (!user) {
+    return res.status(404).json({ message: 'Usuário não encontrado' });
+  }
 
-  res.json(user);
+  res.json(sanitizeUser(user));
 };
 
 /**
@@ -38,16 +51,22 @@ export const getUserById = async (req, res) => {
  */
 export const updateUser = async (req, res) => {
   const id = parseId(req.params.id);
-  if (id === null) return res.status(400).json({ message: 'ID inválido' });
 
-  const { name, email } = req.body;
+  if (id === null) {
+    return res.status(400).json({ message: 'ID inválido' });
+  }
+
+  const { nome, email } = req.body;
 
   const user = await User.findByPk(id);
-  if (!user) return res.status(404).json({ message: 'Usuário não encontrado' });
+
+  if (!user) {
+    return res.status(404).json({ message: 'Usuário não encontrado' });
+  }
 
   try {
-    await user.update({ name, email });
-    res.json(user);
+    await user.update({ nome, email });
+    res.json(sanitizeUser(user));
   } catch (err) {
     res.status(400).json({ message: 'Erro ao atualizar usuário', details: err.message });
   }

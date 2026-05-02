@@ -1,19 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { User } from '../models/index.js';
 import { signAccessToken, revokeAccessToken } from '../services/jwt.service.js';
-
-function sanitizeUser(user) {
-    return {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        role: user.role,
-        criado_em: user.criado_em,
-        pontos: user.pontos,
-        nivel: user.nivel,
-        id_avatar: user.id_avatar
-    };
-}
+import { sanitizeUser } from '../utils/userUtils.js';
 
 /**
  * POST /auth/register
@@ -21,9 +9,10 @@ function sanitizeUser(user) {
  * Cria um novo usuário com senha criptografada
  */
 export const register = async (req, res) => {
-    const { username, email, password, role } = req.body;
-    if (!username || !email || !password) {
-        return res.status(400).json({ message: 'Username, email e senha são obrigatórios' });
+    const { nome, username, email, password, role } = req.body;
+
+    if (!nome || !username || !email || !password) {
+        return res.status(400).json({ message: 'Nome, username, email e senha são obrigatórios' });
     }
 
     if (password.length < 8) {
@@ -53,6 +42,7 @@ export const register = async (req, res) => {
 
     try {
         const user = await User.create({
+            nome,
             username,
             email,
             senha_hash: passwordHash,
@@ -78,13 +68,13 @@ export const register = async (req, res) => {
  * Retorna o token de acesso e os dados do usuário
  */
 export const login = async (req, res) => {
-    const { email, password } = req.body;
+    const { username, password } = req.body;
 
-    if (!email || !password) {
-        return res.status(400).json({ message: 'E-mail e senha são obrigatórios' });
+    if (!username || !password) {
+        return res.status(400).json({ message: 'Username e senha são obrigatórios' });
     }
 
-    const user = await User.findOne({ where: { email } });
+    const user = await User.findOne({ where: { username } });
 
     if (!user) {
         return res.status(401).json({ message: 'Credenciais inválidas' });

@@ -10,7 +10,6 @@ import { requireAuth, requirePermission, requireRole } from '../middlewares/auth
 
 const router = express.Router();
 
-// Definindo as rotas
 router.get('/', requireAuth, requirePermission('users:read'), getAllUsers);
 router.get('/:id', requireAuth, getUserById);
 router.put('/:id', requireAuth, requirePermission('users:update'), updateUser);
