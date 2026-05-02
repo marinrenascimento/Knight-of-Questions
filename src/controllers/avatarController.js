@@ -2,7 +2,7 @@ import { Avatar, User } from '../models/index.js';
 import { Op } from 'sequelize';
 
 /**
- * GET /avatares
+ * GET /avatares/list
  * 
  * Busca todos os avatares cadastrados no banco de dados
  */
@@ -21,21 +21,23 @@ export const getAllAvatares = async (req, res) => {
 };
 
 /**
- * GET /avatares/disponiveis?userId=X
+ * GET /avatares/disponiveis
  * 
- * Busca os avatares disponíveis para o usuário baseado no nível dele
+ * Busca os avatares disponíveis para o usuário logado com base no nível dele
+ * Traz todos, mas os disponíveis vêm com a propriedade 'disponivel' = true e os indisponíveis com false
  */
-export const getAvataresDisponiveis = async (req, res) => {
-    const userId = req.query.userId || req.body.userId;
+export const getAvataresDisponiveisByUser = async (req, res) => {
+    const userId = req.authUser?.id;
 
     if (!userId) {
-        return res.status(400).json({
-            message: 'O id do usuário é obrigatório'
+        return res.status(401).json({
+            message: 'Usuário não autenticado'
         });
     }
 
     try {
         const user = await User.findByPk(userId);
+
         if (!user) {
             return res.status(404).json({
                 message: 'Usuário não encontrado'
@@ -43,15 +45,15 @@ export const getAvataresDisponiveis = async (req, res) => {
         }
 
         const avatares = await Avatar.findAll({
-            where: {
-                nivel_requerido: {
-                    [Op.lte]: user.nivel
-                }
-            },
             order: [['nivel_requerido', 'ASC']]
         });
 
-        res.json(avatares);
+        const avataresComStatus = avatares.map(avatar => ({
+            ...avatar.toJSON(),
+            disponivel: user.nivel >= avatar.nivel_requerido
+        }));
+
+        res.json(avataresComStatus);
     } catch (err) {
         res.status(500).json({
             message: 'Erro ao buscar avatares disponíveis',
@@ -61,15 +63,16 @@ export const getAvataresDisponiveis = async (req, res) => {
 };
 
 /**
- * GET /avatares/selecionado?userId=X
+ * GET /avatares/selecionado
  * 
- * Busca o avatar atual do usuário com base no id dele
+ * Busca o avatar atual do usuário logado
  */
 export const getAvatarSelecionado = async (req, res) => {
-    const userId = req.query.userId || req.body.userId;
+    const userId = req.authUser?.id;
+
     if (!userId) {
         return res.status(400).json({
-            message: 'O id do usuário é obrigatório'
+            message: 'O id do usuário não foi informado'
         });
     }
 
@@ -96,5 +99,59 @@ export const getAvatarSelecionado = async (req, res) => {
             message: 'Erro ao buscar avatar selecionado',
             details: err.message
         });
+    }
+};
+
+/**
+ * PUT /avatares/selecionar
+ * 
+ * Seleciona um avatar para o usuário logado
+ */
+export const selecionarAvatar = async (req, res) => {
+    const userId = req.authUser?.id;
+
+    if (!userId) {
+        return res.status(401).json({
+            message: 'Usuário não autenticado'
+        });
+    }
+
+    const { id_avatar } = req.body || {};
+
+    if (!id_avatar) {
+        return res.status(400).json({
+            message: 'O id_avatar é obrigatório no corpo da requisição'
+        });
+    }
+
+    try {
+        const user = await User.findByPk(userId);
+        if (!user) {
+            return res.status(404).json({
+                message: 'Usuário não encontrado'
+            });
+        }
+
+        const avatar = await Avatar.findByPk(id_avatar);
+
+        if (!avatar) {
+            return res.status(404).json({
+                message: 'Avatar não encontrado'
+            });
+        }
+
+        if (user.nivel < avatar.nivel_requerido) {
+            return res.status(403).json({
+                message: 'Você ainda não conquistou o nível necessário para selecionar este avatar'
+            });
+        }
+
+        await user.update({ id_avatar });
+        res.json({
+            message: 'Avatar selecionado com sucesso!',
+            user
+        });
+    } catch (err) {
+        res.status(500).json({ message: 'Erro ao selecionar avatar', details: err.message });
     }
 };

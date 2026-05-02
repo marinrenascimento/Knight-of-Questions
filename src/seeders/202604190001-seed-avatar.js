@@ -1,5 +1,4 @@
 export async function up({ queryInterface }) {
-    const now = new Date();
     await queryInterface.bulkInsert('Avatars', [
         { id: 1, nome: 'Cavaleiro - Rank Bronze', imagem_url: 'https://exemplo.com/avatares/cavaleiro_bronze.png', nivel_requerido: 0 },
         { id: 2, nome: 'Goblin - Rank Prata', imagem_url: 'https://exemplo.com/avatares/goblin_prata.png', nivel_requerido: 1 },
@@ -14,8 +13,8 @@ export async function up({ queryInterface }) {
         { id: 11, nome: 'Cavaleiro com Armadura Personalizada - Rank Diamante Branco', imagem_url: 'https://exemplo.com/avatares/cavaleiro_diamante_branco.png', nivel_requerido: 10 },
     ]);
 
-    // Atualiza a sequência autoincremental no PostgreSQL
     const sequelize = queryInterface.sequelize;
+
     if (sequelize) {
         await sequelize.query(`SELECT setval('"Avatars_id_seq"', (SELECT MAX(id) FROM "Avatars"));`);
     }

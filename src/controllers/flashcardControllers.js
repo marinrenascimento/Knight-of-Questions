@@ -48,8 +48,6 @@ export const getFlashcardsByDeck = (req, res) => {
     res.json(deckFlashcards);
 };
 
-
-
 // POST /flashcards
 export const createFlashcard = (req, res) => {
 
