@@ -15,6 +15,11 @@ function sanitizeUser(user) {
     };
 }
 
+/**
+ * POST /auth/register
+ * 
+ * Cria um novo usuário com senha criptografada
+ */
 export const register = async (req, res) => {
     const { username, email, password, role } = req.body;
     if (!username || !email || !password) {
@@ -66,6 +71,12 @@ export const register = async (req, res) => {
     }
 };
 
+/**
+ * POST /auth/login
+ * 
+ * Faz login com email e senha, comparando com o hash armazenado no banco.
+ * Retorna o token de acesso e os dados do usuário
+ */
 export const login = async (req, res) => {
     const { email, password } = req.body;
 
@@ -94,6 +105,11 @@ export const login = async (req, res) => {
     });
 };
 
+/**
+ * POST /auth/logout
+ * 
+ * Remove o token de acesso, fazendo logout do usuário
+ */
 export const logout = async (req, res) => {
     const authHeader = req.headers.authorization;
 
@@ -107,6 +123,11 @@ export const logout = async (req, res) => {
     return res.json({ message: 'Logout realizado com sucesso' });
 };
 
+/**
+ * PATCH /auth/update-password
+ * 
+ * Atualiza a senha do usuário logado, comparando com a senha atual.
+ */
 export const updatePassword = async (req, res) => {
     const { oldPassword, newPassword } = req.body;
     const userId = req.authUser?.id;
