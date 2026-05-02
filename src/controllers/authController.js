@@ -64,7 +64,7 @@ export const register = async (req, res) => {
 /**
  * POST /auth/login
  * 
- * Faz login com email e senha, comparando com o hash armazenado no banco.
+ * Faz login com username e senha, comparando com o hash armazenado no banco.
  * Retorna o token de acesso e os dados do usuário
  */
 export const login = async (req, res) => {
