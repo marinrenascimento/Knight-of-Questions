@@ -43,13 +43,13 @@ export const requireRole = (...allowedRoles) => (req, res, next) => {
 
 const rolePermissions = {
     admin: ['users:read', 'users:update', 'flashcards:read', 'flashcards:create', 'flashcards:update', 'flashcards:delete', 'avatar:read', 'avatar:update'],
-    visitante: ['flashcards:read']
+    estudante: [],
+    visitante: []
 };
 
 export const requirePermission = (permission) => (req, res, next) => {
     const userRole = req.authUser?.role;
 
-    // hasPermission check
     const hasPermission = (role, perm) => {
         return rolePermissions[role]?.includes(perm) || false;
     };

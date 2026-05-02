@@ -9,10 +9,11 @@ export async function up({ queryInterface, Sequelize }) {
         id_avatar: {
             type: Sequelize.INTEGER,
             allowNull: false,
+            defaultValue: 1,
             references: { model: 'Avatars', key: 'id' },
             onDelete: 'CASCADE',
             onUpdate: 'CASCADE',
         },
-        criado_em: { type: Sequelize.DATE, allowNull: false },
+        criado_em: { type: Sequelize.DATE, allowNull: false, defaultValue: Sequelize.NOW },
     });
 }
