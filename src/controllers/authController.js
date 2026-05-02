@@ -9,7 +9,7 @@ import { sanitizeUser } from '../utils/userUtils.js';
  * Cria um novo usuário com senha criptografada
  */
 export const register = async (req, res) => {
-    const { nome, username, email, password, role } = req.body;
+    const { nome, username, email, password, role } = req.body || {};
 
     if (!nome || !username || !email || !password) {
         return res.status(400).json({ message: 'Nome, username, email e senha são obrigatórios' });
@@ -68,7 +68,7 @@ export const register = async (req, res) => {
  * Retorna o token de acesso e os dados do usuário
  */
 export const login = async (req, res) => {
-    const { username, password } = req.body;
+    const { username, password } = req.body || {};
 
     if (!username || !password) {
         return res.status(400).json({ message: 'Username e senha são obrigatórios' });
@@ -119,7 +119,7 @@ export const logout = async (req, res) => {
  * Atualiza a senha do usuário logado, comparando com a senha atual.
  */
 export const updatePassword = async (req, res) => {
-    const { oldPassword, newPassword } = req.body;
+    const { oldPassword, newPassword } = req.body || {};
     const userId = req.authUser?.id;
 
     if (!userId) {
@@ -152,9 +152,14 @@ export const updatePassword = async (req, res) => {
         user.senha_hash = newPasswordHash;
         await user.save();
 
-        return res.json({ message: 'Senha atualizada com sucesso' });
+        return res.json({
+            message: 'Senha atualizada com sucesso'
+        });
     } catch (error) {
         console.error("ERRO AO ATUALIZAR SENHA:", error);
-        return res.status(500).json({ message: 'Ocorreu um erro ao atualizar a senha.' });
+
+        return res.status(500).json({
+            message: 'Ocorreu um erro ao atualizar a senha.'
+        });
     }
 };

@@ -7,7 +7,7 @@ function parseId(value) {
 }
 
 /**
- * GET /users
+ * GET /users/list
  * 
  * Lista todos os usuários
  */
@@ -24,7 +24,7 @@ export const getAllUsers = async (req, res) => {
 };
 
 /**
- * GET /users/:id
+ * GET /users/view/:id
  * 
  * Busca um usuário por ID
  */
@@ -45,7 +45,7 @@ export const getUserById = async (req, res) => {
 };
 
 /**
- * PUT /users/:id
+ * PUT /users/update/:id
  * 
  * Atualiza um usuário
  */
@@ -56,7 +56,17 @@ export const updateUser = async (req, res) => {
     return res.status(400).json({ message: 'ID inválido' });
   }
 
-  const { nome, email } = req.body;
+  if (req.authUser.id !== id && req.authUser.role !== 'admin') {
+    return res.status(403).json({
+      message: 'Você não tem permissão para alterar o perfil de outros usuários'
+    });
+  }
+
+  const { nome, email } = req.body || {};
+
+  if (!nome || !email) {
+    return res.status(400).json({ message: 'Nome e email são obrigatórios' });
+  }
 
   const user = await User.findByPk(id);
 
@@ -73,19 +83,34 @@ export const updateUser = async (req, res) => {
 };
 
 /**
- * DELETE /users/:id
+ * DELETE /users/delete/:id
  * 
  * Remove um usuário
  */
 export const deleteUser = async (req, res) => {
   const id = parseId(req.params.id);
-  if (id === null) return res.status(400).json({ message: 'ID inválido' });
+
+  if (id === null) {
+    return res.status(400).json({ message: 'ID inválido' });
+  }
+
+  if (req.authUser.id !== id && req.authUser.role !== 'admin') {
+    return res.status(403).json({
+      message: 'Você não tem permissão para deletar outros usuários'
+    });
+  }
 
   const user = await User.findByPk(id);
-  if (!user) return res.status(404).json({ message: 'Usuário não encontrado' });
+
+  if (!user) {
+    return res.status(404).json({ message: 'Usuário não encontrado' });
+  }
 
   await user.destroy();
-  res.status(204).send();
+
+  return res.json({
+    message: 'Usuário deletado com sucesso'
+  });
 };
 
 /**
@@ -101,7 +126,7 @@ export const selecionarAvatar = async (req, res) => {
     });
   }
 
-  const { id_avatar } = req.body;
+  const { id_avatar } = req.body || {};
 
   if (!id_avatar) {
     return res.status(400).json({

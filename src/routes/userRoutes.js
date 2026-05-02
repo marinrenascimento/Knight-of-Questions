@@ -10,9 +10,9 @@ import { requireAuth, requirePermission, requireRole } from '../middlewares/auth
 
 const router = express.Router();
 
-router.get('/', requireAuth, requirePermission('users:read'), getAllUsers);
-router.get('/:id', requireAuth, getUserById);
-router.put('/:id', requireAuth, requirePermission('users:update'), updateUser);
-router.delete('/:id', requireAuth, requireRole('admin'), deleteUser);
+router.get('/list', requireAuth, requirePermission('users:read'), getAllUsers);
+router.get('/view/:id', requireAuth, requirePermission('users:read'), getUserById);
+router.put('/update/:id', requireAuth, updateUser);
+router.delete('/delete/:id', requireAuth, requireRole('admin'), deleteUser);
 
 export default router;
