@@ -1,6 +1,7 @@
 import express from 'express';
 import 'dotenv/config';
 import userRoutes from './src/routes/userRoutes.js';
+import sessaoRoutes from './src/routes/sessaoRoutes.js';
 import avatarRoutes from './src/routes/avatarRoutes.js';
 import { initModels } from './src/models/index.js';
 import { bootstrapDb } from './src/db/bootstrap.js';
@@ -16,6 +17,7 @@ const port = Number.parseInt(process.env.PORT ?? '3000', 10);
 app.use(express.json());
 
 app.use('/users', userRoutes);
+app.use('/sessao', sessaoRoutes);
 app.use('/avatares', avatarRoutes);
 app.use('/auth', authRoutes);
 app.use('/ofensiva', ofensivaRoutes);
