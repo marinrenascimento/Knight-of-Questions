@@ -1,29 +1,40 @@
 import { Flashcard, User } from '../models/index.js';
 import { sequelize } from '../config/sequelize.js';
 
+/**
+ * GET /view/:id
+ * 
+ * Busca um flashcard pelo ID
+ */
 export const getCardById = async (req, res) => {
     try {
         const id = parseInt(req.params.id, 10);
         const card = await Flashcard.findByPk(id);
-        if (!card) return res.status(404).json({ message: 'Flashcard não encontrado' });
+
+        if (!card) {
+            return res.status(404).json({ message: 'Flashcard não encontrado' });
+        }
+
         res.json(card);
     } catch (err) {
         res.status(500).json({ message: 'Erro ao buscar flashcard', error: err.message });
     }
 };
 
+/**
+ * GET /flashcards/cards-by-conteudo-and-disciplina-and-limite
+ * 
+ * Busca flashcards por conteúdo e disciplina e limite
+ */
 export const getCardsByConteudoAndDisciplinaAndLimite = async (req, res) => {
     try {
-        // Agora extraímos os dados do corpo da requisição (req.body)
         const { disciplinaId, conteudoId, limite } = req.body;
 
         const cards = await Flashcard.findAll({
             where: {
                 id_disciplina: disciplinaId,
-                // Mantém a lógica dinâmica: só filtra por conteúdo se ele for enviado
                 ...(conteudoId && { id_conteudo: conteudoId })
             },
-            // Aplica o limite (padrão 10 se não for informado)
             limit: limite ? parseInt(limite, 10) : 10
         });
 
@@ -33,6 +44,11 @@ export const getCardsByConteudoAndDisciplinaAndLimite = async (req, res) => {
     }
 };
 
+/**
+ * GET /flashcards/cards-by-deck-id-order-by-dificuldade/:deckId
+ * 
+ * Busca flashcards por deck ID e ordem de dificuldade
+ */
 export const getCardsByIdDeckOrderByDificuldade = async (req, res) => {
     try {
         const id_deck = parseInt(req.params.deckId, 10);
@@ -46,6 +62,11 @@ export const getCardsByIdDeckOrderByDificuldade = async (req, res) => {
     }
 };
 
+/**
+ * GET /flashcards/cards-by-deck-id/:deckId
+ * 
+ * Busca flashcards por deck ID
+ */
 export const getCardsByIdDeck = async (req, res) => {
     try {
         const id_deck = parseInt(req.params.deckId, 10);
@@ -56,23 +77,35 @@ export const getCardsByIdDeck = async (req, res) => {
     }
 };
 
+/**
+ * POST /flashcards/create-card
+ * 
+ * Cria um novo flashcard
+ */
 export const createCard = async (req, res) => {
     try {
         const { frente, verso, id_disciplina, id_conteudo, id_deck } = req.body;
+
         const newCard = await Flashcard.create({
             frente, verso, id_disciplina, id_conteudo, id_deck, dificuldade: 1
         });
+
         res.status(201).json(newCard);
     } catch (err) {
         res.status(500).json({ message: 'Erro ao criar flashcard', error: err.message });
     }
 };
 
+/**
+ * PATCH /flashcards/edit-card/:id
+ * 
+ * Edita um flashcard existente
+ */
 export const editCard = async (req, res) => {
     try {
         const id = parseInt(req.params.id, 10);
         const { frente, verso } = req.body;
-        
+
         const card = await Flashcard.findByPk(id);
         if (!card) return res.status(404).json({ message: 'Flashcard não encontrado' });
 
@@ -83,6 +116,11 @@ export const editCard = async (req, res) => {
     }
 };
 
+/**
+ * DELETE /flashcards/delete-card/:id
+ * 
+ * Deleta um flashcard existente
+ */
 export const deleteCard = async (req, res) => {
     try {
         const id = parseInt(req.params.id, 10);
@@ -97,21 +135,23 @@ export const deleteCard = async (req, res) => {
     }
 };
 
+/**
+ * PATCH /flashcards/review-card/:id
+ * 
+ * Atualiza a dificuldade de um flashcard e adiciona pontos ao usuário
+ */
 export const reviewCard = async (req, res) => {
     const transaction = await sequelize.transaction();
 
     try {
         const id = parseInt(req.params.id, 10);
-        
-        // Destruturamos os dados do body
+
         const { novaDificuldade, pontosGanhos, id_user } = req.body;
 
-        // --- VALIDAÇÃO CRÍTICA ---
-        // Se novaDificuldade não existir ou não for um número, paramos aqui
         if (novaDificuldade === undefined || isNaN(parseInt(novaDificuldade, 10))) {
             await transaction.rollback();
-            return res.status(400).json({ 
-                message: 'Erro: novaDificuldade é obrigatória e deve ser um número válido.' 
+            return res.status(400).json({
+                message: 'Erro: novaDificuldade é obrigatória e deve ser um número válido.'
             });
         }
 
@@ -121,16 +161,14 @@ export const reviewCard = async (req, res) => {
             return res.status(404).json({ message: 'Flashcard não encontrado' });
         }
 
-        // 1. Atualiza a dificuldade (Agora garantido que não é NaN)
         await card.update(
-            { dificuldade: parseInt(novaDificuldade, 10) }, 
+            { dificuldade: parseInt(novaDificuldade, 10) },
             { transaction }
         );
 
-        // 2. Lógica de Pontos (Também protegida contra NaN)
         if (id_user && pontosGanhos !== undefined) {
             const pontos = parseInt(pontosGanhos, 10);
-            
+
             if (!isNaN(pontos)) {
                 const user = await User.findByPk(id_user, { transaction });
                 if (user) {
@@ -142,8 +180,8 @@ export const reviewCard = async (req, res) => {
         await transaction.commit();
         await card.reload();
 
-        res.json({ 
-            message: 'Revisão salva com sucesso', 
+        res.json({
+            message: 'Revisão salva com sucesso',
             card,
             pontos_atribuídos: parseInt(pontosGanhos, 10) || 0
         });

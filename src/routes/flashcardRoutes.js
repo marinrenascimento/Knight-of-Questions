@@ -1,17 +1,19 @@
 import express from 'express';
 import {
-    getCardById, 
-    getCardsByConteudoAndDisciplinaAndLimite, 
+    getCardById,
+    getCardsByConteudoAndDisciplinaAndLimite,
     getCardsByIdDeckOrderByDificuldade,
-    getCardsByIdDeck, 
-    createCard, 
-    editCard, 
-    deleteCard, 
+    getCardsByIdDeck,
+    createCard,
+    editCard,
+    deleteCard,
     reviewCard
-} from '../controllers/flashcardController.js'; // Atenção ao nome do seu arquivo controller
+} from '../controllers/flashcardController.js';
 
 
 const router = express.Router();
+
+router.get('/view/:id', getCardById);
 
 // http://localhost:3000/flashcards/filtro
 router.get('/filtro', getCardsByConteudoAndDisciplinaAndLimite);
@@ -21,9 +23,6 @@ router.get('/deck/:deckId/dificuldade', getCardsByIdDeckOrderByDificuldade);
 
 // http://localhost:3000/flashcards/deck/:deckId
 router.get('/deck/:deckId', getCardsByIdDeck);
-
-// http://localhost:3000/flashcards/getById/:id
-router.get('/getById/:id', getCardById);
 
 // http://localhost:3000/flashcards/create
 router.post('/create', createCard);
