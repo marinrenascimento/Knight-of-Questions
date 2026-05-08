@@ -13,6 +13,7 @@ import {
 
 const router = express.Router();
 
+// http://localhost:3000/flashcards/view/:id
 router.get('/view/:id', getCardById);
 
 // http://localhost:3000/flashcards/filtro
@@ -31,7 +32,6 @@ router.post('/create', createCard);
 router.patch('/update/:id', editCard);
 
 // http://localhost:3000/flashcards/delete/:id
-// Não tem a tabela flashCard Reviews, nem no documento do drive
 router.delete('/delete/:id', deleteCard);
 
 // http://localhost:3000/flashcards/review/:id
