@@ -36,25 +36,47 @@ export const getDisciplinaById = async (req, res) => {
     }
 };
 
+/**
+ * POST /disciplinas/create
+ * 
+ * Cria um novo registro de disciplina
+ */
 export const createDisciplina = async (req, res) => {
     try {
-        const { nome } = req.body;
-        if (!nome) return res.status(400).json({ message: 'Nome é obrigatório' });
+        const { nome } = req.body ?? {};
+
+        if (!nome) {
+            return res.status(400).json({ message: 'Nome é obrigatório' });
+        }
 
         const disciplina = await Disciplina.create({ nome });
         res.status(201).json(disciplina);
     } catch (err) {
-        res.status(500).json({ message: 'Erro ao criar disciplina', error: err.message });
+        res.status(500).json({
+            message: 'Erro ao criar disciplina', error: err.message
+        });
     }
 };
 
+/**
+ * PATCH /disciplinas/update/:id
+ * 
+ * Atualiza os dados de um registro de disciplina
+ */
 export const updateDisciplina = async (req, res) => {
     try {
         const id = parseInt(req.params.id, 10);
-        const { nome } = req.body;
+        const { nome } = req.body ?? {};
+
+        if (!nome) {
+            return res.status(400).json({ message: 'Nome é obrigatório' });
+        }
 
         const disciplina = await Disciplina.findByPk(id);
-        if (!disciplina) return res.status(404).json({ message: 'Disciplina não encontrada' });
+
+        if (!disciplina) {
+            return res.status(404).json({ message: 'Disciplina não encontrada' });
+        }
 
         await disciplina.update({ nome });
         res.json(disciplina);
@@ -63,12 +85,19 @@ export const updateDisciplina = async (req, res) => {
     }
 };
 
+/**
+ * POST /disciplinas/delete/:id
+ * 
+ * Remove uma disciplina
+ */
 export const deleteDisciplina = async (req, res) => {
     try {
         const id = parseInt(req.params.id, 10);
         const disciplina = await Disciplina.findByPk(id);
 
-        if (!disciplina) return res.status(404).json({ message: 'Disciplina não encontrada' });
+        if (!disciplina) {
+            return res.status(404).json({ message: 'Disciplina não encontrada' });
+        }
 
         await Conteudo.destroy({ where: { disciplina_id: id } }); // Remove conteúdos vinculados
         await disciplina.destroy();
