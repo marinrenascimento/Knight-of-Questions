@@ -1,6 +1,7 @@
 import express from 'express';
 import 'dotenv/config';
 import { sequelize } from './src/config/sequelize.js';
+
 import userRoutes from './src/routes/userRoutes.js';
 import avatarRoutes from './src/routes/avatarRoutes.js';
 import { initModels } from './src/models/index.js';
@@ -11,6 +12,8 @@ import avaliacaoRoutes from './src/routes/avaliacaoRoutes.js';
 import perguntaRoutes from './src/routes/perguntaRoutes.js';
 import disciplinaRoutes from './src/routes/disciplinaRoutes.js'
 import flashcardRoutes from './src/routes/flashcardRoutes.js'
+import ofensivaRoutes from './src/routes/ofensivaRoutes.js';
+import acessosRecentesRoutes from './src/routes/acessosRecentesRoutes.js';
 
 initModels();
 
@@ -31,7 +34,8 @@ app.use('/conteudos', conteudoRoutes);
 app.use('/flashcards', flashcardRoutes);
 app.use('/avaliacoes', avaliacaoRoutes);
 app.use('/perguntas', perguntaRoutes);
-
+app.use('/ofensiva', ofensivaRoutes);
+app.use('/acessos', acessosRecentesRoutes);
 app.get('/', (req, res) => {
     res.send('API com Express funcionando!');
 });
