@@ -7,6 +7,11 @@ import { bootstrapDb } from './src/db/bootstrap.js';
 import authRoutes from './src/routes/authRoutes.js';
 import ofensivaRoutes from './src/routes/ofensivaRoutes.js';
 import acessosRecentesRoutes from './src/routes/acessosRecentesRoutes.js';
+import swaggerUi from 'swagger-ui-express';
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
+const swaggerFile = require('./swagger_output.json');
 
 initModels();
 await bootstrapDb();
@@ -20,9 +25,14 @@ app.use('/avatares', avatarRoutes);
 app.use('/auth', authRoutes);
 app.use('/ofensiva', ofensivaRoutes);
 app.use('/acessos', acessosRecentesRoutes);
-app.get('/', (req, res) => {
-    res.send('API com Express funcionando!');
-});
+
+/**
+ * Documentação do Swagger
+ * 
+ * GET http://localhost:3000/docs
+ */
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerFile));
+
 app.listen(port, () => {
     console.log(`Servidor rodando em http://localhost:${port}`);
 });
