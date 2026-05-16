@@ -2,6 +2,11 @@
 let sessoes = [];
 let idCounter = 1;
 
+/**
+ * POST http://localhost:3000/sessao/start
+ * 
+ * Inicia uma nova sessão
+ */
 const startSessao = async (req, res) => {
     try {
         const { user_id } = req.body || {};
