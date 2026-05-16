@@ -1,24 +1,43 @@
 import { Avaliacao, Pergunta } from '../models/index.js';
-import { QueryTypes } from 'sequelize';
 import { sequelize } from '../config/sequelize.js';
-// ... resto dos imports
-// Assumindo a criação dos models AvaliacaoReview e RespostaUsuario no futuro
 
+/**
+ * GET http://localhost:3000/avaliacoes/:id
+ * 
+ * Busca uma avaliação pelo ID e retorna a avaliação e suas perguntas
+ */
 export const getAvaliacaoById = async (req, res) => {
     try {
         const id = parseInt(req.params.id, 10);
-        // Ajuste o alias 'perguntas' se não estiver definido no seu index.js
+
         const avaliacao = await Avaliacao.findByPk(id);
-        const perguntas = await Pergunta.findAll({ where: { id_avaliacao: id } });
-        
-        if (!avaliacao) return res.status(404).json({ message: 'Avaliação não encontrada' });
-        
-        res.json({ ...avaliacao.toJSON(), perguntas });
+        const perguntas = await Pergunta.findAll({
+            where: { id_avaliacao: id }
+        });
+
+        if (!avaliacao) {
+            return res.status(404).json({
+                message: 'Avaliação não encontrada'
+            });
+        }
+
+        res.json({
+            ...avaliacao.toJSON(),
+            perguntas
+        });
     } catch (err) {
-        res.status(500).json({ message: 'Erro ao buscar avaliação', error: err.message });
+        res.status(500).json({
+            message: 'Erro ao buscar avaliação',
+            error: err.message
+        });
     }
 };
 
+/**
+ * GET http://localhost:3000/avaliacoes/user/:userId
+ * 
+ * Busca todas as avaliações de um usuário
+ */
 export const getAllAvaliacoesByUser = async (req, res) => {
     try {
         const userId = parseInt(req.params.userId, 10);
@@ -29,15 +48,35 @@ export const getAllAvaliacoesByUser = async (req, res) => {
     }
 };
 
+/**
+ * GET http://localhost:3000/avaliacoes/vestibular/all
+ * 
+ * Busca todas as avaliações de vestibulares
+ * Avaliações de vestibulares = is_vestibular = true AND id_user = null
+ * Caso a pessoa vincule para uma avaliação de vestibular, o id_user será alterado para o id do usuário
+ */
 export const getAllAvaliacoesVestibulares = async (req, res) => {
     try {
-        const avaliacoes = await Avaliacao.findAll({ where: { is_vestibular: true } });
+        const avaliacoes = await Avaliacao.findAll({
+            where: {
+                is_vestibular: true,
+                id_user: null
+            }
+        });
         res.json(avaliacoes);
     } catch (err) {
-        res.status(500).json({ message: 'Erro ao buscar avaliações', error: err.message });
+        res.status(500).json({
+            message: 'Erro ao buscar avaliações',
+            error: err.message
+        });
     }
 };
 
+/**
+ * POST http://localhost:3000/avaliacoes/create
+ * 
+ * Cria uma nova avaliação
+ */
 export const createAvaliacao = async (req, res) => {
     const transaction = await sequelize.transaction();
 
@@ -45,7 +84,9 @@ export const createAvaliacao = async (req, res) => {
         const { titulo, is_vestibular, id_user, disciplina_id, quantidade_perguntas } = req.body;
 
         if (!titulo) {
-            return res.status(400).json({ message: "O título da avaliação é obrigatório." });
+            return res.status(400).json({ 
+                message: "O título da avaliação é obrigatório." 
+            });
         }
 
         const novaAvaliacao = await Avaliacao.create(
@@ -55,12 +96,11 @@ export const createAvaliacao = async (req, res) => {
 
         const avaliacaoId = novaAvaliacao.id;
         let perguntasAdicionadas = 0;
-        
-        // NOVO: Array para guardar as perguntas que o sistema vai clonar
-        const perguntasClonadas = []; 
+
+        const perguntasClonadas = [];
 
         if (disciplina_id && quantidade_perguntas > 0) {
-            
+
             const [perguntasSorteadas] = await sequelize.query(
                 `SELECT id, enunciado, nivel_dificuldade, conteudo_id 
                  FROM pergunta 
@@ -68,9 +108,9 @@ export const createAvaliacao = async (req, res) => {
                  ORDER BY RANDOM() 
                  LIMIT :quantidade`,
                 {
-                    replacements: { 
-                        disciplina_id: parseInt(disciplina_id, 10), 
-                        quantidade: parseInt(quantidade_perguntas, 10) 
+                    replacements: {
+                        disciplina_id: parseInt(disciplina_id, 10),
+                        quantidade: parseInt(quantidade_perguntas, 10)
                     },
                     transaction
                 }
@@ -80,7 +120,7 @@ export const createAvaliacao = async (req, res) => {
             perguntasAdicionadas = perguntas.length;
 
             for (const originalPergunta of perguntas) {
-                
+
                 const insertPergunta = await sequelize.query(
                     `INSERT INTO pergunta (enunciado, nivel_dificuldade, disciplina_id, id_avaliacao, conteudo_id)
                      VALUES (:enunciado, :nivel_dificuldade, :disciplina_id, :id_avaliacao, :conteudo_id)
@@ -90,7 +130,7 @@ export const createAvaliacao = async (req, res) => {
                             enunciado: originalPergunta.enunciado,
                             nivel_dificuldade: originalPergunta.nivel_dificuldade || 1,
                             disciplina_id: parseInt(disciplina_id, 10),
-                            id_avaliacao: avaliacaoId, 
+                            id_avaliacao: avaliacaoId,
                             conteudo_id: originalPergunta.conteudo_id || null
                         },
                         transaction
@@ -137,7 +177,7 @@ export const createAvaliacao = async (req, res) => {
                 perguntas_efetivamente_clonadas: perguntasAdicionadas
             },
             // NOVO: Retorna a lista exata das questões criadas para o front-end
-            questoes_adicionadas: perguntasClonadas 
+            questoes_adicionadas: perguntasClonadas
         });
 
     } catch (err) {
@@ -166,7 +206,7 @@ export const deleteDeckAndFlashcards = async (req, res) => {
 
     try {
         const id = parseInt(req.params.id, 10);
-        
+
         const avaliacao = await Avaliacao.findByPk(id, { transaction });
         if (!avaliacao) {
             await transaction.rollback();
@@ -186,18 +226,18 @@ export const deleteDeckAndFlashcards = async (req, res) => {
             // 2. NOVO: Apaga o histórico de respostas dos usuários vinculadas a essas perguntas
             await sequelize.query(
                 `DELETE FROM resposta_usuario WHERE id_pergunta IN (:perguntaIds)`,
-                { 
+                {
                     replacements: { perguntaIds },
-                    transaction 
+                    transaction
                 }
             );
 
             // 3. Apaga as alternativas
             await sequelize.query(
                 `DELETE FROM alternativa WHERE id_pergunta IN (:perguntaIds)`,
-                { 
+                {
                     replacements: { perguntaIds },
-                    transaction 
+                    transaction
                 }
             );
         }
@@ -215,11 +255,11 @@ export const deleteDeckAndFlashcards = async (req, res) => {
         }
 
         // 5. Deleta as perguntas via Model
-        await Pergunta.destroy({ 
+        await Pergunta.destroy({
             where: { id_avaliacao: id },
             transaction
         });
-        
+
         // 6. Deleta a avaliação via Model
         await avaliacao.destroy({ transaction });
 
@@ -264,18 +304,18 @@ export const finishAvaliacao = async (req, res) => {
              FROM resposta_usuario r
              LEFT JOIN alternativa a ON r.id_alternativa = a.id
              WHERE r.id_avaliacao_review = :reviewId`,
-            { 
-                replacements: { reviewId: parseInt(id_avaliacao_review, 10) } 
+            {
+                replacements: { reviewId: parseInt(id_avaliacao_review, 10) }
             }
         );
 
         // 2. Faz o cálculo usando JavaScript puro (Zero chance de erro de conversão)
         const totalRespondidas = respostas.length;
-        
+
         // Filtra os acertos garantindo que entende true (booleano), 'true' (string) ou 1 (inteiro)
-        const acertos = respostas.filter(r => 
-            r.is_correta === true || 
-            r.is_correta === 'true' || 
+        const acertos = respostas.filter(r =>
+            r.is_correta === true ||
+            r.is_correta === 'true' ||
             r.is_correta === 1
         ).length;
 
@@ -317,7 +357,7 @@ export const getResultadoAvaliacao = async (req, res) => {
     console.log("CHEGOU NA ROTA! ID:", req.params.reviewId);
     try {
         const id_avaliacao_review = parseInt(req.params.reviewId, 10);
-        
+
         // Note que tirei os colchetes daqui. Vamos pegar o retorno bruto e puro.
         const rawResult = await sequelize.query(
             `SELECT 
@@ -362,7 +402,7 @@ export const getResultadoAvaliacao = async (req, res) => {
 export const getAnotacoesByAvaliacao = async (req, res) => {
     try {
         const id_avaliacao_review = parseInt(req.params.reviewId, 10);
-        
+
         // Executa a consulta SQL pura para buscar as anotações
         const anotacoes = await sequelize.query(
             `SELECT id, anotacoes 
